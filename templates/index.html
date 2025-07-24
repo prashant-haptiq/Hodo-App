@@ -7,7 +7,23 @@
     <title>Hodo App</title>
 </head>
 <body>
-    <h1>Hello World!</h1>
+    <h1>Tasks Todo</h1>
+    <ul>
+      {% for todo in todos %} 
+      <li>
+          <input type="checkbox" name="done" {%if todo['done']%} checked {%endif%} disabled onchange="this.form.submit()">
+          <span {%if todo['done']%} style="text-decoration:line-through" {%endif%}> {{ todo['task'] }} </span>
+          <a href="{{ url_for('check', index=loop.index0) }}"> check </a>
+          <a href="{{ url_for('edit', index=loop.index0) }}"> edit </a>
+          <a href="{{ url_for('delete', index=loop.index0) }}"> delete </a>
+      </li>
+      {% endfor %}
+    </ul>
+    <form action="{{ url_for('add') }}" method="post">
+      <input type="text" name="todo">
+      <button type="submit">Add task</button>
+
+    </form>
 
 </body>
 </html>
