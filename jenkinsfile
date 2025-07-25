@@ -1,0 +1,79 @@
+pipeline {
+  agent any 
+
+  environment {
+    GITHUB_REPO = "https://github.com/prashant-haptiq/Hodo-App.git"
+    IMAGE_NAME = "flask_hodo_app"
+    CONTAINER_NAME = "hodo_container"
+
+  }
+  stages {
+    stage ('Pull') {
+      steps {
+        echo 'pull code from github'
+        git branch: 'master' , url:"${GITHUB_REPO}"
+      }
+
+    }
+
+    stage ('Test') {
+      steps {
+        echo 'testing the application'
+
+        sh ''' 
+          # checking app.py has correct syntax 
+          python3 -c "import py_compile; py_compile.compile('app.py')"
+          
+          echo "Test passed successfully"
+          '''
+
+      }
+
+    }
+
+    stage ('Build') {
+      steps {
+        echo 'Building docker image ' 
+        sh ''' 
+          # checking is already container is running if yes , then remove 
+          docker stop ${CONTAINER_NAME} || true 
+          docker rm ${CONTAINER_NAME} || true 
+
+          #building new docker image 
+          docker build -t ${IMAGE_NAME} .  
+
+          '''
+
+      }
+
+
+    }
+
+    stage ('Run') {
+      steps {
+        echo 'running container' 
+        sh '''
+          docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME} 
+
+          echo 'application is running at http://34.235.185.38:5000'
+
+      }
+
+    }
+
+
+  }
+
+  post {
+    success {
+      echo 'Application is running on port 5000' 
+
+    }
+    failure {
+      echo 'ERROR! check logs'
+
+    }
+
+  }
+
+}
