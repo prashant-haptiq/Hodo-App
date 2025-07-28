@@ -16,31 +16,26 @@ pipeline {
 
     }
 
-    stage ('Test') {
-      steps {
-        echo 'testing the application'
-
-        sh ''' 
-          # checking app.py has correct syntax 
-          python3 -c "import py_compile; py_compile.compile('app.py')"
-          
-          echo "Test passed successfully"
-          '''
-
-      }
-
-    }
-
     stage ('Build') {
       steps {
-        echo 'Building docker image ' 
-        sh ''' 
-          # checking is already container is running if yes , then remove 
-          docker stop ${CONTAINER_NAME} || true 
-          docker rm ${CONTAINER_NAME} || true 
+        echo 'Building docker image'
+         
+        sh "docker build -t ${IMAGE_NAME} ."
 
-          #building new docker image 
-          docker build -t ${IMAGE_NAME} .  
+
+      }
+
+    }
+
+    stage ('Test') {
+      steps {
+        echo 'Running test inside the container using pytest' 
+        sh ''' 
+          #running test inside the new container which we build from image
+          #--rm flag will automatically remove the container after the test 
+          #if the test fails , so the pipeline stage 
+
+          docker run --rm ${IMAGE_NAME} pytest
 
           '''
 
@@ -49,10 +44,15 @@ pipeline {
 
     }
 
-    stage ('Run') {
+    stage ('Deploy') {
       steps {
         echo 'running container' 
         sh '''
+          #stopping old container if exists and starting a new one , to avoid port conflicts
+          docker stop ${CONTAINER_NAME} || true 
+          docker rm ${CONTAINER_NAME} || true
+
+          #run the new container in detached mode
           docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME} 
 
           echo 'application is running at http://34.235.185.38:5000'
