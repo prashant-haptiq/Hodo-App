@@ -35,7 +35,10 @@ pipeline {
           #--rm flag will automatically remove the container after the test 
           #if the test fails , so the pipeline stage 
 
-          docker run --rm ${IMAGE_NAME} pytest
+          #runnig pytest with verbose reporting (-rA)
+          #-v (volume mount) ensures that the file which is generated 'report.xml' is saved in jenkins workspace ie. ec2 instance
+
+          docker run --rm -v ${pwd}:/app ${IMAGE_NAME} pytest -rA --junit-xml=report.xml
 
           '''
 
@@ -67,6 +70,11 @@ pipeline {
   }
 
   post {
+    always {
+      #this will print the test report in jenkins UI
+      junit 'report.xml'
+
+    }
     success {
       echo 'Application is running on port 5000' 
 
