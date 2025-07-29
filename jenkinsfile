@@ -40,6 +40,8 @@ pipeline {
 
           docker run --rm -v ${pwd}:/app ${IMAGE_NAME} pytest -rA --junit-xml=report.xml
 
+          pwd
+
           '''
 
       }
